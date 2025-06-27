@@ -5,8 +5,9 @@ from datetime import datetime
 import enum
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 import asyncio
-from ..config import DATABASE_URL
 
+
+DATABASE_URL= "postgresql+asyncpg://postgress:0000@localhost:5432/attest"
 Base = declarative_base()
 
 class GenerationType(str, enum.Enum):
