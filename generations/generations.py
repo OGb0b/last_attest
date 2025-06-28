@@ -2,17 +2,6 @@ from g4f.client import Client
 import requests
 
 def generate_description(product_name: str, business_description: str, target_audience: str):
-    """
-    Генерирует описание товара на основе его названия и данных бизнеса
-    
-    Args:
-        product_name: Название товара
-        business_description: Описание бизнеса
-        target_audience: Целевая аудитория
-        
-    Returns:
-        Сгенерированное описание товара
-    """
     client = Client()
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -23,9 +12,21 @@ def generate_description(product_name: str, business_description: str, target_au
     )
     return response.choices[0].message.content
 
+def generate_ad_text(product_name: str, business_description: str, target_audience: str):
+    client = Client()
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "user", "content": f"Составь краткий, продающий рекламный текст для товара на русском языке. Учитывай следующие данные о бизнесе:\n\nОписание бизнеса: {business_description}\nЦелевая аудитория: {target_audience}\n\nБез приветствий, лишних пояснений и вводных фраз — только готовый текст для рекламы. Товар: {product_name}"}
+        ]
+    )
+    return response.choices[0].message.content
+
+
+
 def generate_product_card(product_name: str, business_description: str, target_audience: str):
     """
-    Генерирует промпт для создания карточки товара
+    Генерирует изображение для карточки товара
     
     Args:
         product_name: Название товара
@@ -33,31 +34,29 @@ def generate_product_card(product_name: str, business_description: str, target_a
         target_audience: Целевая аудитория
         
     Returns:
-        Промпт для создания карточки товара
+        URL изображения
     """
     client = Client()
-    response = client.chat.completions.create(
+    
+    # Генерируем промпт
+    prompt_response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {"role": "user", "content": f"сгенерируй промпт на английском языке для создания карточки товара:{product_name}, описание бизнеса:{business_description}, целевая аудитория:{target_audience}"}
         ],
         web_search=False
     )
-    return response.choices[0].message.content
-
+    prompt = prompt_response.choices[0].message.content
+    
+    # Генерируем изображение
+    image_response = client.images.generate(
+        model="flux",
+        prompt=prompt,
+        response_format="url"
+    )
+    return image_response.data[0].url
 
 def generate_ad_text(product_name: str, business_description: str, target_audience: str):
-    """
-    Генерирует рекламный текст для товара
-    
-    Args:
-        product_name: Название товара
-        business_description: Описание бизнеса
-        target_audience: Целевая аудитория
-        
-    Returns:
-        Рекламный текст
-    """
     client = Client()
     response = client.chat.completions.create(
         model="gpt-4o-mini",

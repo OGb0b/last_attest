@@ -13,6 +13,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy import select
 from generations.generations import generate_description as generate_product_description, generate_ad_text, generate_product_card
 
+
+
 router = Router()
 
 @router.message(Command("start"))
@@ -222,29 +224,10 @@ async def generate_card(message: Message, state: FSMContext):
             await state.set_state(BotStates.Start)
             return
             
-        # Генерируем промпт для изображения
-        prompt = generate_product_card(text, business.description, business.target_audience)
-        
+     
         # Генерируем изображение
         try:
-            client = Client()
-            response = client.images.generate(
-                model="flux",
-                prompt=prompt,
-                response_format="url"
-            )
-            image_url = response.data[0].url
-            
-            # Сохраняем генерацию в базу данных
-            async with SessionLocal() as session:
-                generation = Generation(
-                    business_id=business_id,
-                    type=GenerationType.product_card,
-                    object_id=1,  # FIXME: Получать реальный ID объекта
-                    created_at=dt.utcnow()
-                )
-                session.add(generation)
-                await session.commit()
+            image_url = generate_product_card(text, business.description, business.target_audience)
             
             # Отправляем изображение и сообщение
             await message.answer_photo(
@@ -294,16 +277,7 @@ async def generate_description(message: Message, state: FSMContext):
                 business.target_audience
             )
             
-            # Сохраняем генерацию в базу данных
-            async with SessionLocal() as session:
-                generation = Generation(
-                    business_id=business_id,
-                    type=GenerationType.product_description,
-                    object_id=1,  # FIXME: Получать реальный ID объекта
-                    created_at=dt.utcnow()
-                )
-                session.add(generation)
-                await session.commit()
+
             
             # Сохраняем данные в состояние
             await state.update_data(
@@ -388,18 +362,9 @@ async def generate_ad_text(message: Message, state: FSMContext):
                 business.description,
                 business.target_audience
             )
-            
-            # Сохраняем генерацию в базу данных
-            async with SessionLocal() as session:
-                generation = Generation(
-                    business_id=business_id,
-                    type=GenerationType.ad_text,
-                    object_id=1,  # FIXME: Получать реальный ID объекта
-                    created_at=dt.utcnow()
-                )
-                session.add(generation)
-                await session.commit()
-            
+
+            await session.commit()
+
             # Отправляем рекламный текст и сообщение
             await message.answer(
                 f"Рекламный текст для товара {text} успешно сгенерирован! Вот результат:\n\n{ad_text}\n\nВыберите следующее действие:",
@@ -412,6 +377,5 @@ async def generate_ad_text(message: Message, state: FSMContext):
             return
     
     # Возвращаемся в начальное состояние
-    await state.set_state(BotStates.Start)
     await state.set_state(BotStates.Start)
 
