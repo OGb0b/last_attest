@@ -10,14 +10,13 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from handlers import user_handler
-
 TOKEN = "7714704448:AAG-vX5NOkRbr9dGp4LLthTfTojqzb1tCTM"
 dp = Dispatcher(storage=MemoryStorage())
-dp.include_router(user_handler.router)
 
 async def main():
     bot = Bot(token=TOKEN)
+    from handlers import user_handler
+    dp.include_router(user_handler.router)
     await dp.start_polling(bot)
 
 
