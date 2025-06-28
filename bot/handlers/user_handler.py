@@ -5,9 +5,9 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from keyboard.inline_kb import start_keyboard_inline
 from states.state_bot import BotStates, BusinessCreation
-from sqlalchemy.ext.asyncio import AsyncSession
 from data_base.models import User, Business
-import datetime
+from data_base.db import SessionLocal
+from datetime import datetime as dt
 
 
 router = Router()
@@ -56,39 +56,38 @@ async def process_business_description(message: types.Message, state: FSMContext
 @router.message(BusinessCreation.waiting_for_audience)
 async def process_business_audience(
         message: types.Message,
-        state: FSMContext,
-        session: AsyncSession
+        state: FSMContext
 ):
-    data = await state.get_data()
-    await state.clear()
+    async with SessionLocal() as session:
+        data = await state.get_data()
+        await state.clear()
 
-    try:
-        user = await session.get(User, message.from_user.id)
-        if not user:
-            user = User(
-                id=message.from_user.id,
-                username=message.from_user.username,
-                created_at=datetime.utcnow()
+        try:
+            user = await session.get(User, message.from_user.id)
+            if not user:
+                user = User(
+                    id=message.from_user.id,
+                    username=message.from_user.username,
+                    created_at=dt.utcnow()
+                )
+                session.add(user)
+
+            new_business = Business(
+                user_id=user.id,
+                name=data['name'],
+                description=data['description'],
+                target_audience=message.text,
+                created_at=dt.utcnow()
             )
-            session.add(user)
+            session.add(new_business)
+            await session.commit()
 
-        new_business = Business(
-            user_id=user.id,
-            name=data['name'],
-            description=data['description'],
-            target_audience=message.text,
-            created_at=datetime.utcnow()
-        )
-
-        session.add(new_business)
-        await session.commit()
-
-        await message.answer(
-            f"✅ Бизнес '{new_business.name}' успешно создан!\n"
-            f"ID: {new_business.id}\n"
-            f"Описание: {new_business.description}\n"
-            f"Целевая аудитория: {new_business.target_audience}"
-        )
-    except Exception as e:
-        await message.answer(f"❌ Ошибка при создании бизнеса: {str(e)}")
-        await session.rollback()
+            await message.answer(
+                f"✅ Бизнес '{new_business.name}' успешно создан!\n"
+                f"ID: {new_business.id}\n"
+                f"Описание: {new_business.description}\n"
+                f"Целевая аудитория: {new_business.target_audience}"
+            )
+        except Exception as e:
+            await session.rollback()
+            await message.answer(f"❌ Ошибка при создании бизнеса: {str(e)}")

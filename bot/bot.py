@@ -3,12 +3,12 @@ import logging
 import os
 import sys
 
+# Добавляем родительскую директорию в sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from aiogram import Bot, Dispatcher
-from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-#from ..config import BOT_TOKEN
-
 
 from handlers import user_handler
 
@@ -17,7 +17,7 @@ dp = Dispatcher(storage=MemoryStorage())
 dp.include_router(user_handler.router)
 
 async def main():
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = Bot(token=TOKEN)
     await dp.start_polling(bot)
 
 
