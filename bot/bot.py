@@ -2,15 +2,17 @@ import asyncio
 import logging
 import os
 import sys
+from dotenv import load_dotenv
 
-# Добавляем родительскую директорию в sys.path
+load_dotenv()
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
-TOKEN = "7714704448:AAG-vX5NOkRbr9dGp4LLthTfTojqzb1tCTM"
+
+TOKEN = os.getenv("BOT_TOKEN")
 dp = Dispatcher(storage=MemoryStorage())
 
 async def main():
