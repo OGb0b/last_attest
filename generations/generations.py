@@ -25,20 +25,9 @@ def generate_ad_text(product_name: str, business_description: str, target_audien
 
 
 def generate_product_card(product_name: str, business_description: str, target_audience: str):
-    """
-    Генерирует изображение для карточки товара
-    
-    Args:
-        product_name: Название товара
-        business_description: Описание бизнеса
-        target_audience: Целевая аудитория
-        
-    Returns:
-        URL изображения
-    """
     client = Client()
     
-    # Генерируем промпт
+
     prompt_response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -48,7 +37,7 @@ def generate_product_card(product_name: str, business_description: str, target_a
     )
     prompt = prompt_response.choices[0].message.content
     
-    # Генерируем изображение
+
     image_response = client.images.generate(
         model="flux",
         prompt=prompt,
